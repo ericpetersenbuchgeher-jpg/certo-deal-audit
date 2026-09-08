@@ -1,0 +1,679 @@
+<title>CERTO Deal Audit</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    /* Palette "Notarile" — fiducia + immobiliare: carta travertino, inchiostro, blu notarile, ottone */
+    --carta:#FBFAF6;        /* fondo: bianco travertino, caldo */
+    --pietra:#F1EFE8;       /* superfici secondarie */
+    --card:#FFFFFF;
+    --ink:#161A22;          /* inchiostro con bias blu */
+    --muted:#5D6470;
+    --line:#E3E0D6;
+    --notarile:#1E3A5F;     /* primario: blu notarile profondo */
+    --notarile-ink:#FFFFFF;
+    --notarile-soft:#E8EDF4;
+    --ottone:#9C7A3C;       /* accento raro: ottone delle targhe */
+    --ok:#2E7D4F; --warn:#a86f14; --stop:#B0432E;
+    --ok-bg:#E4F0E8; --warn-bg:#F5ECD8; --stop-bg:#F5E0DA;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --carta:#14161C; --pietra:#1C1F27; --card:#1F232C;
+      --ink:#E9E8E2; --muted:#9BA1AC; --line:#2E323C;
+      --notarile:#8FAAD1; --notarile-ink:#10141B; --notarile-soft:#232B3A;
+      --ottone:#C2A165;
+      --ok:#6FBE8F; --warn:#D9A94F; --stop:#DE7C63;
+      --ok-bg:#203026; --warn-bg:#332B1B; --stop-bg:#33221D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --carta:#14161C; --pietra:#1C1F27; --card:#1F232C;
+    --ink:#E9E8E2; --muted:#9BA1AC; --line:#2E323C;
+    --notarile:#8FAAD1; --notarile-ink:#10141B; --notarile-soft:#232B3A;
+    --ottone:#C2A165;
+    --ok:#6FBE8F; --warn:#D9A94F; --stop:#DE7C63;
+    --ok-bg:#203026; --warn-bg:#332B1B; --stop-bg:#33221D;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{background:var(--carta);color:var(--ink);font-family:"Source Sans 3",system-ui,sans-serif;font-size:16.5px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px 80px}
+  h1,h2,h3,.serif{font-family:"Newsreader",Georgia,serif;text-wrap:balance}
+  .mono{font-family:"IBM Plex Mono",monospace}
+  button{font-family:inherit;cursor:pointer}
+  a{color:var(--notarile)}
+  :focus-visible{outline:3px solid var(--notarile);outline-offset:2px;border-radius:3px}
+  [hidden]{display:none!important}
+
+  .btn{border:0;border-radius:99px;padding:13px 26px;font-weight:600;font-size:15.5px;transition:transform .15s ease,box-shadow .15s ease;text-decoration:none;display:inline-block}
+  .btn:hover{transform:translateY(-1px)}
+  .btn-p{background:var(--notarile);color:var(--notarile-ink)}
+  .btn-p:hover{box-shadow:0 8px 24px rgba(30,58,95,.25)}
+  .btn-s{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+  .btn-ghost{background:transparent;color:var(--muted);border:0;text-decoration:underline;font-size:13.5px;padding:6px}
+  .tlink{font-weight:600;color:var(--ink);text-decoration:none;border-bottom:1.5px solid var(--ottone);padding-bottom:2px}
+  .tlink:hover{color:var(--notarile)}
+  .chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.06em;padding:3px 10px;border-radius:3px}
+  .c-ok{background:var(--ok-bg);color:var(--ok)} .c-warn{background:var(--warn-bg);color:var(--warn)} .c-stop{background:var(--stop-bg);color:var(--stop)}
+  .c-na{background:var(--pietra);color:var(--muted)}
+  label{display:flex;flex-direction:column;gap:5px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  input,select,textarea{background:var(--carta);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:"Source Sans 3",sans-serif;font-size:15.5px;padding:10px 12px}
+
+  /* ————— LANDING ————— */
+  #landing .lwrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  .topbar{display:flex;align-items:center;gap:26px;padding:26px 0}
+  .lb{font-family:"Newsreader",serif;font-weight:600;font-size:26px;letter-spacing:.01em}
+  .lb .dot{color:var(--ottone)}
+  .topbar .beta{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .topbar .right{margin-left:auto;display:flex;align-items:center;gap:22px}
+  .topbar .loglink{background:none;border:0;font-weight:600;font-size:15px;color:var(--ink)}
+  .topbar .loglink:hover{color:var(--notarile)}
+
+  .hero{display:flex;gap:64px;align-items:center;flex-wrap:wrap;padding:76px 0 90px}
+  .hero-l{flex:1 1 460px;min-width:300px}
+  .kick{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--ottone);margin-bottom:22px}
+  .hero h1{font-size:clamp(44px,6.6vw,76px);font-weight:500;line-height:1.02;letter-spacing:-.01em}
+  .hero h1 em{font-style:italic;font-weight:500;color:var(--notarile)}
+  .hero .sub{font-size:19px;color:var(--muted);max-width:50ch;margin:26px 0 34px}
+  .hero .sub strong{color:var(--ink);font-weight:600}
+  .cta-row{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+  .trust{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);margin-top:26px;letter-spacing:.05em}
+
+  .hero-r{flex:0 1 380px;min-width:300px}
+  .mockcard{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--ottone);border-radius:8px;box-shadow:0 30px 70px rgba(22,26,34,.12);padding:24px}
+  .mockcard .mk{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .mockcard h3{font-size:21px;font-weight:600;margin:6px 0 14px}
+  .mockcard .vband{border-radius:6px;padding:12px 14px;background:var(--warn-bg);margin-bottom:14px}
+  .mockcard .vband b{font-family:"Newsreader",serif;font-size:19px;color:var(--warn);letter-spacing:.02em}
+  .mockcard .mrow{display:flex;justify-content:space-between;font-size:13.5px;border-top:1px solid var(--line);padding:8px 0}
+  .mockcard .mrow span:last-child{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+  .mockcard .mflag{font-size:12.5px;color:var(--muted);margin-top:12px;border-left:2px solid var(--ottone);padding-left:10px}
+  @media (prefers-reduced-motion:no-preference){
+    .rise{opacity:0;transform:translateY(16px);animation:rise .8s cubic-bezier(.2,.7,.2,1) forwards}
+    .rise.d1{animation-delay:.1s}.rise.d2{animation-delay:.22s}.rise.d3{animation-delay:.36s}
+    @keyframes rise{to{opacity:1;transform:none}}
+  }
+
+  .band{border-top:1px solid var(--line);padding:84px 0}
+  .band h2{font-size:clamp(30px,4.4vw,44px);font-weight:500;margin-bottom:12px}
+  .band h2 em{font-style:italic;color:var(--notarile)}
+  .band .bsub{color:var(--muted);max-width:58ch;margin-bottom:44px;font-size:17.5px}
+  .fasi{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:44px}
+  .fase{border-top:1.5px solid var(--ink);padding-top:18px}
+  .fase .fn{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;color:var(--ottone)}
+  .fase h3{font-size:23px;font-weight:600;margin:8px 0 10px}
+  .fase p{font-size:15px;color:var(--muted)}
+
+  .who{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:44px}
+  .who .w{border-top:1px solid var(--line);padding-top:16px;font-size:15px;color:var(--muted)}
+  .who .w b{display:block;font-family:"Newsreader",serif;font-weight:600;font-size:19px;color:var(--ink);margin-bottom:6px}
+
+  .cta-band{text-align:center;padding:96px 0}
+  .cta-band h2{font-size:clamp(32px,5vw,52px);font-weight:500;margin-bottom:26px}
+  .cta-band h2 em{font-style:italic;color:var(--notarile)}
+
+  footer.lfoot{border-top:1px solid var(--line);padding:28px 0 64px;font-size:12.5px;color:var(--muted)}
+
+  /* ————— AUTH MODAL ————— */
+  dialog#authdlg{
+    border:0;border-radius:12px;padding:0;background:var(--card);color:var(--ink);
+    width:min(440px,92vw);box-shadow:0 40px 100px rgba(22,26,34,.35);
+    margin:auto; /* centrata */
+  }
+  dialog#authdlg::backdrop{background:rgba(22,26,34,.45);backdrop-filter:blur(3px)}
+  .authbox{padding:28px}
+  .authhead{display:flex;align-items:flex-start;gap:12px;margin-bottom:6px}
+  .authbox h2{font-size:26px;font-weight:600}
+  .xclose{margin-left:auto;background:none;border:0;font-size:22px;line-height:1;color:var(--muted);padding:4px 8px;border-radius:6px}
+  .xclose:hover{color:var(--ink);background:var(--pietra)}
+  .authbox .asub{color:var(--muted);font-size:14px;margin-bottom:18px}
+  .tabs{display:flex;border:1px solid var(--line);border-radius:99px;overflow:hidden;margin-bottom:20px}
+  .tabs button{flex:1;border:0;background:var(--pietra);color:var(--muted);padding:10px;font-weight:600;font-size:14.5px}
+  .tabs button.on{background:var(--notarile);color:var(--notarile-ink)}
+  .authbox form{display:flex;flex-direction:column;gap:13px}
+  .authmsg{font-size:13.5px;padding:9px 12px;border-radius:5px;display:none}
+  .authmsg.err{display:block;background:var(--stop-bg);color:var(--stop)}
+  .authmsg.ok{display:block;background:var(--ok-bg);color:var(--ok)}
+  .fineprint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:14px}
+
+  /* ————— APP ————— */
+  header.app{padding:26px 0 16px;border-bottom:2px solid var(--ink);margin-bottom:22px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+  .brand{font-family:"Newsreader",serif;font-weight:600;font-size:26px}
+  .brand .dot{color:var(--ottone)}
+  .brand .tag{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--notarile);border:1px solid var(--notarile);padding:2px 8px;border-radius:3px;vertical-align:middle;margin-left:8px}
+  .userbox{margin-left:auto;display:flex;align-items:center;gap:12px;font-size:14px}
+  .userbox .un{font-weight:600}
+  .demo-chip{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.06em;color:var(--warn);background:var(--warn-bg);padding:4px 10px;border-radius:99px}
+
+  .stepper{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px}
+  .step{flex:1 1 150px;border:1px solid var(--line);background:var(--pietra);border-radius:6px;padding:10px 14px;text-align:left}
+  .step .sn{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .step .st{font-weight:700;font-size:15px}
+  .step.active{border-color:var(--notarile);background:var(--notarile-soft)}
+  .step.active .sn{color:var(--notarile)}
+  .step.done .sn::after{content:" ✓";color:var(--ok)}
+
+  .phase{display:none}
+  .phase.show{display:block}
+  h2.ph{font-size:26px;font-weight:600;margin-bottom:6px}
+  .sub{color:var(--muted);margin-bottom:20px;max-width:64ch}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px;margin-bottom:16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:620px){.grid2{grid-template-columns:1fr}}
+  textarea{resize:vertical;min-height:60px}
+  .row-btns{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 4px;align-items:center}
+
+  .scheda{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 22px;font-size:14.5px}
+  .scheda div b{display:block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:400}
+
+  .doclist{display:flex;flex-direction:column;gap:10px}
+  .docrow{display:grid;grid-template-columns:1fr 190px;gap:12px;align-items:start;border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--card)}
+  @media (max-width:620px){.docrow{grid-template-columns:1fr}}
+  .docrow .dn{font-weight:700;font-size:15px}
+  .docrow .dd{font-size:13px;color:var(--muted)}
+  .docrow select,.docrow input{width:100%}
+  .docrow input{margin-top:6px;font-size:13.5px}
+
+  .flags{margin-top:6px}
+  .flag{display:flex;gap:10px;align-items:flex-start;border-left:4px solid var(--stop);background:var(--stop-bg);border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:8px;font-size:14.5px}
+  .flag.warn{border-color:var(--warn);background:var(--warn-bg)}
+  .flag b{display:block}
+  .flag small{color:var(--muted)}
+
+  .verdict{border-radius:8px;padding:22px 24px;margin:18px 0;border:2px solid var(--line)}
+  .verdict.go{border-color:var(--ok);background:var(--ok-bg)}
+  .verdict.cond{border-color:var(--warn);background:var(--warn-bg)}
+  .verdict.no{border-color:var(--stop);background:var(--stop-bg)}
+  .verdict h3{font-size:27px;font-weight:600;margin-bottom:6px}
+  .nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:14px 0}
+  .num{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+  .num b{display:block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:400;margin-bottom:4px}
+  .num span{font-family:"IBM Plex Mono",monospace;font-size:18px;font-variant-numeric:tabular-nums}
+  .formula{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);background:var(--pietra);border-radius:6px;padding:10px 14px;margin-top:10px;overflow-x:auto}
+  ul.clean{margin:8px 0 8px 20px}
+  ul.clean li{margin-bottom:6px;font-size:14.5px}
+  .foot{border-top:1px solid var(--line);margin-top:40px;padding-top:14px;font-size:12.5px;color:var(--muted)}
+  #dossier .dhead{border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:18px}
+
+  @media print{
+    body{background:#fff;color:#111}
+    #landing,nav.stepper,.row-btns,header.app,.no-print{display:none!important}
+    .phase{display:none!important}
+    #ph-dossier{display:block!important}
+    .card,.docrow,.num{border-color:#ccc;background:#fff}
+    .wrap{max-width:100%;padding:0}
+  }
+</style>
+
+<!-- ═══════════════════════ LANDING ═══════════════════════ -->
+<div id="landing">
+  <div class="lwrap">
+    <div class="topbar">
+      <span class="lb">CERTO<span class="dot">.</span></span><span class="beta">Deal Audit · Beta</span>
+      <span class="right">
+        <button class="loglink" onclick="openAuth('log')">Accedi</button>
+        <button class="btn btn-p" onclick="openAuth('reg')">Richiedi accesso</button>
+      </span>
+    </div>
+
+    <div class="hero">
+      <div class="hero-l">
+        <p class="kick rise">Due diligence immobiliare, dalla A alla Z</p>
+        <h1 class="rise d1">Screening.<br>Verifica.<br><em>Verdetto.</em></h1>
+        <p class="sub rise d2">CERTO segue il tuo deal immobiliare per intero: <strong>cosa stai comprando</strong>, <strong>se i documenti reggono</strong>, <strong>a che prezzo ha senso</strong> — fino al dossier pronto per l'investment committee, con le clausole da mettere in contratto.</p>
+        <div class="cta-row rise d2">
+          <button class="btn btn-p" onclick="openAuth('reg')">Registrati e prova la piattaforma</button>
+          <a class="tlink" href="#come">Come funziona</a>
+        </div>
+        <p class="trust rise d3">Motore trasparente · formule in chiaro · i dati del deal restano tuoi</p>
+      </div>
+      <div class="hero-r rise d3" aria-hidden="true">
+        <div class="mockcard">
+          <span class="mk">Dossier · Via F. Melzi d'Eril 9, Milano</span>
+          <h3>Verdetto del comitato</h3>
+          <div class="vband"><b>GO CON CONDIZIONI</b></div>
+          <div class="mrow"><span>Prezzo richiesto</span><span>5.200.000 €</span></div>
+          <div class="mrow"><span>Prezzo massimo</span><span>4.786.000 €</span></div>
+          <div class="mrow"><span>Red flag</span><span>1 critica · 1 aperta</span></div>
+          <p class="mflag">Titolo edilizio: sopralzo non trovato nelle pratiche → condizione sospensiva di regolarizzazione.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="band" id="come">
+      <h2>Tre fasi. <em>Un solo strumento.</em></h2>
+      <p class="bsub">Oggi chi compra mette insieme un consulente per la progettazione, un tecnico per le pratiche e un foglio Excel per decidere. CERTO tiene tutto il percorso in un posto solo.</p>
+      <div class="fasi">
+        <div class="fase"><span class="fn">01</span><h3>Screening</h3><p>Carichi quello che hai; quello che manca lo chiediamo ai registri pubblici. In uscita: cos'è, esiste, di chi è, quanto chiedono.</p></div>
+        <div class="fase"><span class="fn">02</span><h3>Verifica</h3><p>Il fascicolo dell'immobile: visure, titolo edilizio, agibilità, provenienza. Confronto a tre — tu, la controparte, i registri — e red flag automatiche.</p></div>
+        <div class="fase"><span class="fn">03</span><h3>Decisione</h3><p>Dichiari progetto e numeri: il motore restituisce GO/NO-GO, prezzo massimo e le clausole contrattuali che ti proteggono. Dossier stampabile.</p></div>
+      </div>
+    </div>
+
+    <div class="band">
+      <h2>Per chi compra <em>sul serio.</em></h2>
+      <div class="who" style="margin-top:34px">
+        <div class="w"><b>Investitori e family office</b>Il rigore di un comitato, anche quando il comitato sei tu.</div>
+        <div class="w"><b>Costruttori e sviluppatori</b>Le red flag prima dell'offerta, non dopo il compromesso.</div>
+        <div class="w"><b>Advisor e agenzie</b>Un dossier ordinato da mettere davanti al cliente.</div>
+      </div>
+    </div>
+
+    <div class="band cta-band">
+      <h2>Prima di comprare, <em>sappi tutto.</em></h2>
+      <button class="btn btn-p" onclick="openAuth('reg')">Richiedi accesso alla beta</button>
+    </div>
+
+    <footer class="lfoot">
+      CERTO Deal Audit — beta dimostrativa v0.3 (nome di lavoro) · Le interrogazioni ai registri pubblici sono simulate in questa versione. Lo strumento non costituisce due diligence né parere professionale: ogni conclusione va verificata e asseverata da un tecnico abilitato e da un legale.
+    </footer>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MODALE ACCESSO ═══════════════════════ -->
+<dialog id="authdlg" aria-labelledby="auth-title">
+  <div class="authbox">
+    <div class="authhead">
+      <h2 id="auth-title">Richiedi accesso</h2>
+      <button class="xclose" onclick="closeAuth()" aria-label="Chiudi">×</button>
+    </div>
+    <p class="asub" id="auth-sub">Beta su invito: registrati e entri subito.</p>
+    <div class="tabs">
+      <button id="t-reg" class="on" onclick="setTab('reg')">Registrati</button>
+      <button id="t-log" onclick="setTab('log')">Accedi</button>
+    </div>
+    <form id="f-reg" autocomplete="off">
+      <label>Nome e cognome<input id="r_name" required maxlength="60"></label>
+      <label>Email<input id="r_email" type="email" required maxlength="80"></label>
+      <label>Società / attività<input id="r_co" maxlength="60" placeholder="es. impresa, family office, studio"></label>
+      <label>Ruolo<select id="r_role"><option>Investitore</option><option>Costruttore / sviluppatore</option><option>Advisor / agenzia</option><option>Tecnico</option><option>Altro</option></select></label>
+      <label>Password<input id="r_pw" type="password" required minlength="6" maxlength="60"></label>
+      <p class="authmsg" id="reg-msg" role="status"></p>
+      <button class="btn btn-p" type="submit">Crea l'account ed entra →</button>
+    </form>
+    <form id="f-log" hidden autocomplete="off">
+      <label>Email<input id="l_email" type="email" required maxlength="80"></label>
+      <label>Password<input id="l_pw" type="password" required maxlength="60"></label>
+      <p class="authmsg" id="log-msg" role="status"></p>
+      <button class="btn btn-p" type="submit">Accedi →</button>
+    </form>
+    <p class="fineprint">Beta dimostrativa: l'account vive su questo dispositivo (password mai salvata in chiaro). Niente carte, niente vincoli.</p>
+  </div>
+</dialog>
+
+<!-- ═══════════════════════ PIATTAFORMA ═══════════════════════ -->
+<div id="appshell" hidden>
+<div class="wrap">
+  <header class="app">
+    <span class="brand">CERTO<span class="dot">.</span><span class="tag">Deal Audit · Beta</span></span>
+    <span class="demo-chip">DEMO — API registri simulate</span>
+    <span class="userbox"><span class="un" id="who"></span><button class="btn-ghost" onclick="logout()">esci</button></span>
+  </header>
+
+  <nav class="stepper" aria-label="Fasi">
+    <button class="step active" id="tab1" onclick="go(1)"><span class="sn">Fase 1</span><span class="st">Screening</span></button>
+    <button class="step" id="tab2" onclick="go(2)"><span class="sn">Fase 2</span><span class="st">Verifica</span></button>
+    <button class="step" id="tab3" onclick="go(3)"><span class="sn">Fase 3</span><span class="st">Decisione</span></button>
+    <button class="step" id="tab4" onclick="go(4)"><span class="sn">Output</span><span class="st">Dossier</span></button>
+  </nav>
+
+  <section class="phase show" id="ph-1">
+    <h2 class="ph">Screening dell'immobile</h2>
+    <p class="sub">Cos'è, esiste, di chi è. Carichi quello che hai; quello che manca lo chiediamo ai registri pubblici. <em>In questa beta l'interrogazione è simulata — il flusso è quello vero.</em></p>
+    <div class="card">
+      <div class="grid2">
+        <label>Indirizzo *<input id="f_addr" placeholder="Via, civico"></label>
+        <label>Comune *<input id="f_com" placeholder="Milano"></label>
+        <label>Tipologia<select id="f_tipo"><option>Residenziale</option><option>Commerciale</option><option>Misto</option><option>Direzionale</option><option>Altro</option></select></label>
+        <label>Superficie (m²)<input id="f_mq" type="number" min="0" placeholder="es. 1200"></label>
+        <label>Piani fuori terra<input id="f_piani" type="number" min="0" placeholder="es. 5"></label>
+        <label>Anno di costruzione<input id="f_anno" type="number" placeholder="es. 1910"></label>
+        <label>Proprietario dichiarato<input id="f_prop" placeholder="dal venditore / broker"></label>
+        <label>Prezzo richiesto (€)<input id="f_ask" type="number" min="0" placeholder="es. 4200000"></label>
+      </div>
+      <label style="margin-top:12px">I tuoi documenti (restano sul tuo dispositivo)<input id="f_files" type="file" multiple style="padding:8px"></label>
+      <div id="filelist" style="margin-top:8px"></div>
+      <div class="row-btns">
+        <button class="btn btn-p" onclick="screening()">Interroga i registri e genera la scheda</button>
+        <button class="btn btn-s" onclick="demo()">Carica caso demo — Via F. Melzi d'Eril 9</button>
+        <button class="btn-ghost" onclick="resetAll()">azzera il deal</button>
+      </div>
+    </div>
+    <div class="card" id="scheda-card" hidden>
+      <h3 style="margin-bottom:10px">Scheda immobile <span class="chip c-na" id="scheda-src"></span></h3>
+      <div class="scheda" id="scheda"></div>
+      <div class="row-btns"><button class="btn btn-p" onclick="go(2)">Avanti → Fase 2 · Verifica</button></div>
+    </div>
+  </section>
+
+  <section class="phase" id="ph-2">
+    <h2 class="ph">Verifica — il fascicolo dell'immobile</h2>
+    <p class="sub">Qui non si guarda cos'è l'immobile ma <strong>se i documenti reggono</strong>: il confronto è a tre — quello che dichiari tu, quello che dà la controparte, quello che risulta nei registri. Segna lo stato di ogni documento.</p>
+    <div class="doclist" id="doclist"></div>
+    <div class="card" style="margin-top:16px">
+      <h3 style="margin-bottom:8px">Red flag rilevate <span class="chip c-na" id="flagcount"></span></h3>
+      <div class="flags" id="flags"><p class="sub" style="margin:0">Nessuna, per ora.</p></div>
+      <div class="row-btns"><button class="btn btn-p" onclick="go(3)">Avanti → Fase 3 · Decisione</button></div>
+    </div>
+  </section>
+
+  <section class="phase" id="ph-3">
+    <h2 class="ph">Decisione — go / no-go</h2>
+    <p class="sub">Dichiara il progetto: cosa vuoi farci, a quanto entri, a quanto esci. Il motore incrocia i numeri con le red flag della Fase 2. Le formule sono in chiaro — niente scatole nere.</p>
+    <div class="card">
+      <div class="grid2">
+        <label>Cosa vuoi farci<select id="d_dest"><option>Mantengo la destinazione attuale</option><option>Cambio destinazione d'uso</option><option>Frazionamento in unità</option><option>Ristrutturazione e rivendita</option><option>Messa a reddito (locazione)</option></select></label>
+        <label>Prezzo d'acquisto ipotizzato (€)<input id="d_price" type="number" min="0"></label>
+        <label>Budget lavori (€)<input id="d_works" type="number" min="0" value="0"></label>
+        <label>Valore d'uscita atteso (€)<input id="d_exit" type="number" min="0"></label>
+        <label>Orizzonte (mesi)<input id="d_months" type="number" min="1" value="24"></label>
+        <label>Costi di transazione (% su prezzo)<input id="d_tc" type="number" min="0" step="0.5" value="10"></label>
+        <label>Margine minimo richiesto sull'operazione (%)<input id="d_target" type="number" min="0" step="1" value="20"></label>
+      </div>
+      <div class="row-btns"><button class="btn btn-p" onclick="decide()">Calcola il verdetto</button></div>
+    </div>
+    <div id="verdict-zone"></div>
+  </section>
+
+  <section class="phase" id="ph-dossier">
+    <div id="dossier"></div>
+    <div class="row-btns no-print">
+      <button class="btn btn-p" onclick="window.print()">Stampa / salva PDF</button>
+      <button class="btn btn-s" onclick="go(3)">← Torna alla decisione</button>
+    </div>
+  </section>
+
+  <p class="foot">CERTO Deal Audit — beta dimostrativa v0.3 (nome di lavoro). Le interrogazioni ai registri pubblici sono simulate; i dati inseriti restano nel browser di chi usa la pagina. Questo strumento non costituisce due diligence né parere professionale: ogni conclusione va verificata e asseverata da un tecnico abilitato e da un legale. Processo: Screening → Verifica → Decisione, come da documento di progetto dell'8/9/2026.</p>
+</div>
+</div>
+
+<script>
+'use strict';
+// ———————————————— AUTH (demo: account sul dispositivo, password solo come hash) ————————————————
+var MEM={}; // fallback quando localStorage non è disponibile (anteprime, file locali)
+function lsGet(k,d){try{var v=localStorage.getItem(k);if(v!=null)return JSON.parse(v);}catch(e){}return (k in MEM)?MEM[k]:d;}
+function lsSet(k,v){MEM[k]=v;try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function lsDel(k){delete MEM[k];try{localStorage.removeItem(k);}catch(e){}}
+async function hashPw(pw){
+  var data=new TextEncoder().encode('certo·'+pw);
+  if(window.crypto&&crypto.subtle){
+    var buf=await crypto.subtle.digest('SHA-256',data);
+    return Array.prototype.map.call(new Uint8Array(buf),function(x){return x.toString(16).padStart(2,'0')}).join('');
+  }
+  var h1=0x811c9dc5,h2=0x1b873593;
+  for(var r=0;r<64;r++)for(var i=0;i<data.length;i++){
+    h1=Math.imul(h1^data[i],16777619)>>>0;
+    h2=Math.imul(h2^((data[i]+r)&255),2246822519)>>>0;
+  }
+  return 'fnv'+h1.toString(16)+h2.toString(16);
+}
+var DLG=document.getElementById('authdlg');
+function openAuth(t){setTab(t);if(!DLG.open)DLG.showModal();}
+function closeAuth(){if(DLG.open)DLG.close();}
+DLG.addEventListener('click',function(e){if(e.target===DLG)closeAuth();}); // click sul backdrop
+function setTab(t){
+  document.getElementById('t-reg').classList.toggle('on',t==='reg');
+  document.getElementById('t-log').classList.toggle('on',t==='log');
+  document.getElementById('f-reg').hidden=t!=='reg';
+  document.getElementById('f-log').hidden=t!=='log';
+  document.getElementById('auth-title').textContent=t==='reg'?'Richiedi accesso':'Bentornato';
+  document.getElementById('auth-sub').textContent=t==='reg'?'Beta su invito: registrati e entri subito.':'Accedi con le credenziali create su questo dispositivo.';
+}
+function authMsg(id,cls,txt){var m=document.getElementById(id);m.className='authmsg '+cls;m.textContent=txt;}
+function enterApp(user){
+  closeAuth();
+  document.getElementById('landing').hidden=true;
+  document.getElementById('appshell').hidden=false;
+  document.getElementById('who').textContent=user.name?('Ciao, '+user.name.split(' ')[0]):user.email;
+  window.scrollTo({top:0});
+}
+function logout(){
+  lsDel('certo_session');
+  document.getElementById('appshell').hidden=true;
+  document.getElementById('landing').hidden=false;
+  window.scrollTo({top:0});
+}
+document.getElementById('f-reg').addEventListener('submit',async function(ev){
+  ev.preventDefault();
+  var email=document.getElementById('r_email').value.trim().toLowerCase();
+  var user={name:document.getElementById('r_name').value.trim(),email:email,
+            co:document.getElementById('r_co').value.trim(),role:document.getElementById('r_role').value};
+  var pw=document.getElementById('r_pw').value;
+  if(!user.name||!email||pw.length<6)return;
+  var users=lsGet('certo_users',{});
+  if(users[email]){authMsg('reg-msg','err','Questa email è già registrata su questo dispositivo — usa "Accedi".');return;}
+  user.hash=await hashPw(pw);
+  users[email]=user;lsSet('certo_users',users);lsSet('certo_session',email);
+  authMsg('reg-msg','ok','Account creato. Entriamo…');
+  saveLead(user);
+  setTimeout(function(){enterApp(user);},400);
+});
+document.getElementById('f-log').addEventListener('submit',async function(ev){
+  ev.preventDefault();
+  var email=document.getElementById('l_email').value.trim().toLowerCase();
+  var users=lsGet('certo_users',{});
+  if(!users[email]){authMsg('log-msg','err','Email non trovata su questo dispositivo. Registrati per creare l’accesso.');return;}
+  var h=await hashPw(document.getElementById('l_pw').value);
+  if(h!==users[email].hash){authMsg('log-msg','err','Password non corretta.');return;}
+  lsSet('certo_session',email);
+  enterApp(users[email]);
+});
+function saveLead(user){
+  if(!(window.claude&&window.claude.use))return;
+  window.claude.use('artifact').then(function(art){
+    if(!art)return;
+    fetch('data/leads.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():[]}).catch(function(){return[]})
+    .then(function(leads){
+      leads.push({name:user.name,email:user.email,co:user.co,role:user.role,ts:Date.now()});
+      var blob=new Blob([JSON.stringify(leads)],{type:'application/json'});
+      art.publish({'data/leads.json':blob}).catch(function(){});
+    });
+  });
+}
+(function(){
+  var s=lsGet('certo_session',null),users=lsGet('certo_users',{});
+  if(s&&users[s])enterApp(users[s]);
+})();
+
+// ———————————————— PIATTAFORMA ————————————————
+var S={f:{},docs:{},d:{},verdict:null,demoMode:false};
+try{var saved=localStorage.getItem('certo_mvp');if(saved)S=JSON.parse(saved);}catch(e){}
+function persist(){try{localStorage.setItem('certo_mvp',JSON.stringify(S));}catch(e){}}
+function eur(n){return isFinite(n)?n.toLocaleString('it-IT',{maximumFractionDigits:0})+' €':'—';}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+var DOCS=[
+ {id:'visura',n:'Visura catastale',d:'Intestazione, rendita, categoria: coincide col venditore dichiarato?'},
+ {id:'plani',n:'Planimetria catastale',d:'Lo stato di fatto corrisponde alla planimetria depositata?'},
+ {id:'titolo',n:'Titolo edilizio',d:'Licenza/concessione/permesso e successive pratiche: coprono ciò che esiste?'},
+ {id:'agib',n:'Agibilità',d:'Certificato/segnalazione di agibilità presente per l’uso attuale?'},
+ {id:'atto',n:'Atto di provenienza',d:'Compravendita, successione o donazione? Continuità delle trascrizioni?'},
+ {id:'ape',n:'APE',d:'Attestato di prestazione energetica in corso di validità.'},
+ {id:'vincoli',n:'Vincoli e stato dell’edificio',d:'Vincoli (soprintendenza, condominio) o segnalazioni (es. edificio pericolante).'}
+];
+var FLAGKB={
+ visura:{f:'Intestazione catastale non coincidente con il venditore',c:'Verificare provenienza e successioni prima di ogni proposta.',cl:'Dichiarazioni e garanzie rafforzate sulla titolarità; verifica notarile ventennale in condizione sospensiva.'},
+ plani:{f:'Stato di fatto difforme dalla planimetria depositata',c:'Rischio di nullità/rinvio del rogito (conformità catastale obbligatoria).',cl:'Aggiornamento catastale (DOCFA) a cura e spese del venditore prima del rogito.'},
+ titolo:{f:'Titolo edilizio assente o non conforme allo stato di fatto',c:'Possibile difformità urbanistica: sanatoria incerta, mutui bloccati, valore compromesso.',cl:'Condizione sospensiva: regolarizzazione urbanistica perfezionata prima del rogito, oneri a carico venditore.'},
+ agib:{f:'Agibilità mancante per l’uso attuale',c:'Limiti all’utilizzo e alla commerciabilità; rischio su locazioni.',cl:'Trattenuta fiduciaria presso il notaio fino a ottenimento dell’agibilità.'},
+ atto:{f:'Provenienza critica (es. donazione recente, trascrizioni discontinue)',c:'Rischio azione di restituzione/riduzione; banche restie a finanziare.',cl:'Polizza assicurativa sulla provenienza o attesa del consolidamento; parere legale dedicato.'},
+ ape:{f:'APE assente o scaduto',c:'Obbligatorio per il rogito; sanzioni e rinvii.',cl:'Obbligo del venditore di produrre APE valido prima del preliminare.'},
+ vincoli:{f:'Vincolo o segnalazione critica sull’edificio (es. pericolante, tutela)',c:'Limiti al progetto (es. facciata intoccabile) o rischio strutturale.',cl:'Garanzia del venditore: responsabilità, risarcimento e manleva per vizi strutturali emersi entro 12 mesi dal rogito.'}
+};
+
+function go(n){
+  document.querySelectorAll('.phase').forEach(function(p){p.classList.remove('show')});
+  var ids={1:'ph-1',2:'ph-2',3:'ph-3',4:'ph-dossier'};
+  document.getElementById(ids[n]).classList.add('show');
+  for(var i=1;i<=4;i++){var t=document.getElementById('tab'+i);t.classList.toggle('active',i===n);}
+  if(n===4)buildDossier();
+  window.scrollTo({top:0});
+}
+
+var DEMO={addr:"Via Francesco Melzi d'Eril 9",com:'Milano',tipo:'Residenziale',mq:1450,piani:6,anno:1905,prop:'Immobiliare Sempione S.r.l. (dichiarato)',ask:5200000};
+var DEMO_REG={esiste:'Sì — particella censita (dato di esempio)',cat:'A/10 + A/2 (dato di esempio)',zona:'Zona Sempione / Arco della Pace',intest:'Immobiliare Sempione S.r.l. (dato di esempio)'};
+function demo(){
+  S.demoMode=true;
+  ['addr','com','tipo','mq','piani','anno','prop','ask'].forEach(function(k){document.getElementById('f_'+k).value=DEMO[k];});
+  screening();
+}
+function val(id){return document.getElementById(id).value.trim();}
+function readF1(){
+  S.f={addr:val('f_addr'),com:val('f_com'),tipo:val('f_tipo'),mq:val('f_mq'),piani:val('f_piani'),anno:val('f_anno'),prop:val('f_prop'),ask:parseFloat(val('f_ask'))||0};
+}
+function screening(){
+  readF1();
+  if(!S.f.addr||!S.f.com){alert('Servono almeno indirizzo e comune.');return;}
+  var isDemo=S.demoMode&&S.f.addr===DEMO.addr;
+  var reg=isDemo?DEMO_REG:{esiste:'da verificare — API catasto non collegata in questa beta',cat:'da reperire via visura',zona:S.f.com,intest:'da reperire via visura'};
+  var rows=[
+   ['Indirizzo',S.f.addr+', '+S.f.com],['Tipologia',S.f.tipo],['Superficie',S.f.mq?S.f.mq+' m²':'—'],
+   ['Piani',S.f.piani||'—'],['Anno',S.f.anno||'—'],['Esiste nei registri',reg.esiste],
+   ['Categoria catastale',reg.cat],['Zona',reg.zona],['Intestatario nei registri',reg.intest],
+   ['Proprietario dichiarato',S.f.prop||'—'],['Prezzo richiesto',S.f.ask?eur(S.f.ask):'—']
+  ];
+  document.getElementById('scheda').innerHTML=rows.map(function(r){return '<div><b>'+r[0]+'</b>'+esc(r[1])+'</div>'}).join('');
+  document.getElementById('scheda-src').textContent=isDemo?'registri: dati di esempio':'registri: simulati (API da collegare)';
+  document.getElementById('scheda-card').hidden=false;
+  document.getElementById('tab1').classList.add('done');
+  if(S.d&&S.f.ask&&!S.d.price)document.getElementById('d_price').value=S.f.ask;
+  persist();
+}
+document.getElementById('f_files').addEventListener('change',function(){
+  var out=[].map.call(this.files,function(f){return '<span class="chip c-na" style="margin:0 6px 6px 0">'+esc(f.name)+' · '+(f.size/1024).toFixed(0)+' KB</span>';}).join('');
+  document.getElementById('filelist').innerHTML=out+(out?'<div class="sub" style="font-size:12.5px;margin-top:4px">File elencati soltanto — in questa beta non vengono caricati da nessuna parte.</div>':'');
+});
+
+function buildDocs(){
+  var host=document.getElementById('doclist');host.innerHTML='';
+  DOCS.forEach(function(doc){
+    var cur=S.docs[doc.id]||{st:'na',note:''};
+    var row=document.createElement('div');row.className='docrow';
+    row.innerHTML='<div><div class="dn">'+doc.n+'</div><div class="dd">'+doc.d+'</div></div>'+
+      '<div><select data-doc="'+doc.id+'">'+
+      '<option value="na"'+(cur.st==='na'?' selected':'')+'>— stato —</option>'+
+      '<option value="ok"'+(cur.st==='ok'?' selected':'')+'>🟢 Presente e conforme</option>'+
+      '<option value="warn"'+(cur.st==='warn'?' selected':'')+'>🟡 Da reperire / incompleto</option>'+
+      '<option value="stop"'+(cur.st==='stop'?' selected':'')+'>🔴 Incongruente coi registri</option>'+
+      '</select><input data-note="'+doc.id+'" placeholder="nota (dichiarato vs trovato)" value="'+esc(cur.note)+'"></div>';
+    host.appendChild(row);
+  });
+  host.addEventListener('change',onDoc);host.addEventListener('input',onDoc);
+}
+function onDoc(e){
+  var t=e.target,id=t.getAttribute('data-doc')||t.getAttribute('data-note');
+  if(!id)return;
+  S.docs[id]=S.docs[id]||{st:'na',note:''};
+  if(t.getAttribute('data-doc'))S.docs[id].st=t.value;else S.docs[id].note=t.value;
+  renderFlags();persist();
+}
+function flagsList(){
+  var out=[];
+  DOCS.forEach(function(doc){
+    var st=(S.docs[doc.id]||{}).st;
+    if(st==='stop')out.push({sev:'stop',doc:doc.n,kb:FLAGKB[doc.id],note:(S.docs[doc.id]||{}).note});
+    else if(st==='warn')out.push({sev:'warn',doc:doc.n,kb:FLAGKB[doc.id],note:(S.docs[doc.id]||{}).note});
+  });
+  return out;
+}
+function renderFlags(){
+  var fl=flagsList(),host=document.getElementById('flags');
+  var nStop=fl.filter(function(f){return f.sev==='stop'}).length,nWarn=fl.length-nStop;
+  document.getElementById('flagcount').textContent=nStop+' critiche · '+nWarn+' da reperire';
+  if(!fl.length){host.innerHTML='<p class="sub" style="margin:0">Nessuna, per ora.</p>';}
+  else host.innerHTML=fl.map(function(f){
+    return '<div class="flag'+(f.sev==='warn'?' warn':'')+'"><div><b>'+esc(f.doc)+(f.sev==='stop'?' — '+esc(f.kb.f):' — da reperire')+'</b>'+
+    (f.sev==='stop'?esc(f.kb.c):'Documento mancante: da richiedere alla controparte o ai registri.')+
+    (f.note?'<br><small>nota: '+esc(f.note)+'</small>':'')+'</div></div>';
+  }).join('');
+  var any=fl.length||Object.keys(S.docs).some(function(k){return S.docs[k].st==='ok'});
+  if(any)document.getElementById('tab2').classList.add('done');
+}
+
+function decide(){
+  var d={dest:val('d_dest'),price:+val('d_price')||0,works:+val('d_works')||0,exit:+val('d_exit')||0,
+         months:+val('d_months')||24,tc:+val('d_tc')||0,target:+val('d_target')||0};
+  if(!d.price||!d.exit){alert('Servono almeno prezzo d’acquisto e valore d’uscita.');return;}
+  var fl=flagsList();
+  var nStop=fl.filter(function(f){return f.sev==='stop'}).length;
+  var nWarn=fl.length-nStop;
+  var riskPct=nStop*5+nWarn*2;
+  var cost=d.price*(1+d.tc/100+riskPct/100)+d.works;
+  var margin=d.exit-cost, marginPct=cost>0?margin/cost*100:0;
+  var annPct=marginPct*(12/d.months);
+  var costMax=d.exit/(1+d.target/100);
+  var pMax=(costMax-d.works)/(1+d.tc/100+riskPct/100);
+  var blocking=(S.docs.titolo||{}).st==='stop';
+  var v, cls;
+  if(nStop>=3||(blocking&&marginPct<d.target)){v='NO-GO';cls='no';}
+  else if(marginPct<d.target&&pMax<=0){v='NO-GO';cls='no';}
+  else if(nStop>0||nWarn>0||marginPct<d.target){v='GO CON CONDIZIONI';cls='cond';}
+  else{v='GO';cls='go';}
+  var vincoli=[];
+  if(d.dest==='Cambio destinazione d’uso')vincoli.push('Cambio d’uso: verifica di ammissibilità sul piano urbanistico comunale e pratica dedicata prima di vincolarsi.');
+  if(d.dest==='Frazionamento in unità')vincoli.push('Frazionamento: verificare requisiti minimi delle unità e regolamento condominiale.');
+  if((S.docs.vincoli||{}).st==='stop')vincoli.push('Vincolo attivo sull’edificio: il progetto deve assumere l’involucro (es. facciata) come intoccabile fino a parere contrario.');
+  var clausole=fl.filter(function(f){return f.sev==='stop'}).map(function(f){return f.kb.cl;});
+  if(nWarn>0)clausole.push('Consegna dei documenti mancanti del fascicolo come condizione del preliminare.');
+  S.d=d;S.verdict={v:v,cls:cls,margin:margin,marginPct:marginPct,annPct:annPct,pMax:pMax,riskPct:riskPct,cost:cost,vincoli:vincoli,clausole:clausole,nStop:nStop,nWarn:nWarn};
+  persist();
+  var z=document.getElementById('verdict-zone');
+  z.innerHTML='<div class="verdict '+cls+'"><h3>'+v+'</h3><p>'+
+    (cls==='go'?'Numeri e fascicolo reggono, con i parametri dichiarati.':
+     cls==='cond'?'L’operazione sta in piedi solo con le condizioni sotto: prezzo, clausole, documenti.':
+     'Con questi parametri e questo fascicolo l’operazione non regge. Rinegoziare o passare oltre.')+'</p>'+
+    '<div class="nums">'+
+    '<div class="num"><b>Costo totale stimato</b><span>'+eur(S.verdict.cost)+'</span></div>'+
+    '<div class="num"><b>Margine</b><span>'+eur(margin)+' ('+marginPct.toFixed(1)+'%)</span></div>'+
+    '<div class="num"><b>Annualizzato (semplice)</b><span>'+annPct.toFixed(1)+'%/anno</span></div>'+
+    '<div class="num"><b>Buffer rischio da red flag</b><span>'+riskPct+'% del prezzo</span></div>'+
+    '<div class="num"><b>Prezzo massimo d’acquisto</b><span>'+eur(Math.max(0,pMax))+'</span></div>'+
+    '</div>'+
+    (vincoli.length?'<b>Vincoli sul progetto</b><ul class="clean">'+vincoli.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':'')+
+    (clausole.length?'<b>Da scrivere nel contratto</b><ul class="clean">'+clausole.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':'')+
+    '<div class="formula">costo = prezzo × (1 + transazione '+d.tc+'% + rischio '+riskPct+'%) + lavori · margine = uscita − costo · prezzo_max = (uscita / (1 + margine_target '+d.target+'%) − lavori) / (1 + '+d.tc+'% + '+riskPct+'%)</div>'+
+    '</div><div class="row-btns"><button class="btn btn-p" onclick="go(4)">Genera il dossier →</button></div>';
+  document.getElementById('tab3').classList.add('done');
+}
+
+function buildDossier(){
+  var f=S.f,v=S.verdict,host=document.getElementById('dossier');
+  if(!f.addr){host.innerHTML='<p class="sub">Compila prima le fasi 1–3.</p>';return;}
+  var fl=flagsList();
+  var today=new Date().toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
+  host.innerHTML=
+   '<div class="dhead"><span class="mono" style="font-size:11px;letter-spacing:.14em;color:var(--notarile)">CERTO DEAL AUDIT · DOSSIER PER INVESTMENT COMMITTEE · '+today+'</span>'+
+   '<h2 style="font-size:32px;margin-top:6px">'+esc(f.addr)+', '+esc(f.com)+'</h2></div>'+
+   '<div class="card"><h3>1 · Screening</h3><div class="scheda" style="margin-top:10px">'+
+   [['Tipologia',f.tipo],['Superficie',f.mq?f.mq+' m²':'—'],['Piani',f.piani||'—'],['Anno',f.anno||'—'],['Proprietario dichiarato',f.prop||'—'],['Prezzo richiesto',f.ask?eur(f.ask):'—']]
+     .map(function(r){return '<div><b>'+r[0]+'</b>'+esc(r[1])+'</div>'}).join('')+'</div></div>'+
+   '<div class="card"><h3>2 · Fascicolo</h3><div style="margin-top:10px">'+
+   DOCS.map(function(doc){var st=(S.docs[doc.id]||{}).st||'na';
+     var chip=st==='ok'?'<span class="chip c-ok">conforme</span>':st==='warn'?'<span class="chip c-warn">da reperire</span>':st==='stop'?'<span class="chip c-stop">incongruente</span>':'<span class="chip c-na">non valutato</span>';
+     var note=(S.docs[doc.id]||{}).note;
+     return '<p style="margin-bottom:6px"><strong>'+doc.n+'</strong> '+chip+(note?' — <em>'+esc(note)+'</em>':'')+'</p>';}).join('')+'</div>'+
+   (fl.length?'<div class="flags" style="margin-top:10px">'+fl.map(function(x){return '<div class="flag'+(x.sev==='warn'?' warn':'')+'"><div><b>'+esc(x.doc)+'</b>'+(x.sev==='stop'?esc(x.kb.c):'Documento da reperire.')+'</div></div>'}).join('')+'</div>':'')+'</div>'+
+   (v?'<div class="verdict '+v.cls+'"><h3>3 · Verdetto: '+v.v+'</h3>'+
+   '<div class="nums">'+
+   '<div class="num"><b>Costo totale</b><span>'+eur(v.cost)+'</span></div>'+
+   '<div class="num"><b>Margine</b><span>'+eur(v.margin)+' ('+v.marginPct.toFixed(1)+'%)</span></div>'+
+   '<div class="num"><b>Prezzo massimo</b><span>'+eur(Math.max(0,v.pMax))+'</span></div>'+
+   '<div class="num"><b>Red flag</b><span>'+v.nStop+' 🔴 · '+v.nWarn+' 🟡</span></div></div>'+
+   (v.vincoli.length?'<b>Vincoli</b><ul class="clean">'+v.vincoli.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':'')+
+   (v.clausole.length?'<b>Clausole per il contratto di compravendita</b><ul class="clean">'+v.clausole.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':'')+
+   '</div>':'<p class="sub">Verdetto non ancora calcolato (Fase 3).</p>')+
+   '<p class="foot">Documento generato da CERTO Deal Audit — beta dimostrativa. Interrogazioni ai registri simulate. Non costituisce due diligence né parere professionale: conclusioni da verificare e asseverare con tecnico abilitato e legale.</p>';
+  document.getElementById('tab4').classList.add('done');
+}
+
+function resetAll(){
+  if(!confirm('Azzerare i dati di questo deal? (l’account resta)'))return;
+  S={f:{},docs:{},d:{},verdict:null,demoMode:false};
+  try{localStorage.removeItem('certo_mvp');}catch(e){}
+  location.reload();
+}
+buildDocs();renderFlags();
+if(S.f&&S.f.addr){['addr','com','tipo','mq','piani','anno','prop','ask'].forEach(function(k){if(S.f[k]!=null)document.getElementById('f_'+k).value=S.f[k];});screening();}
+if(S.d&&S.d.price){['dest','price','works','exit','months','tc','target'].forEach(function(k){if(S.d[k]!=null)document.getElementById('d_'+k).value=S.d[k];});}
+</script>
