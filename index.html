@@ -281,6 +281,31 @@
   .miniring i{width:24px;height:24px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:8.5px;color:var(--ink)}
   .empty-deals{border:1.5px dashed var(--line);border-radius:8px;padding:40px;text-align:center;color:var(--muted)}
 
+  /* modulo bandi (anteprima) */
+  .bandi{margin-top:34px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .bandi-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:18px 22px;border-bottom:1px solid var(--line)}
+  .bandi-head h3{font-size:21px;font-weight:600}
+  .soon{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;background:var(--ottone);color:#fff;padding:4px 11px;border-radius:99px}
+  .bandi-head .foryou{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;color:var(--notarile)}
+  .bandi-body{display:grid;grid-template-columns:1.1fr 1.3fr;gap:26px;padding:20px 22px}
+  @media (max-width:760px){.bandi-body{grid-template-columns:1fr}}
+  .bandi-body p.bp{font-size:14.5px;color:var(--muted);margin-bottom:14px;max-width:44ch}
+  .bandi-zone{display:flex;gap:8px;align-items:flex-end}
+  .bandi-zone label{flex:1}
+  .notifybtn{white-space:nowrap}
+  .b-preview{position:relative}
+  .b-preview::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(251,250,246,0) 30%,var(--card) 96%);pointer-events:none}
+  .b-item{display:grid;grid-template-columns:1fr auto;gap:2px 12px;border:1px solid var(--line);border-radius:6px;padding:11px 14px;margin-bottom:8px;opacity:.85}
+  .b-item .bt{font-weight:600;font-size:14px}
+  .b-item .bm{font-size:12px;color:var(--muted)}
+  .b-item .match{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ok);align-self:center}
+  .b-item .ex{font-family:"IBM Plex Mono",monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);align-self:center;justify-self:end}
+  .b-locked{display:flex;gap:10px;align-items:center;border-top:1px dashed var(--line);padding:12px 2px 2px;margin-top:10px;font-size:13px;color:var(--muted)}
+  .b-locked svg{flex:0 0 auto}
+  .b-track{display:flex;gap:6px;align-items:center;margin-top:12px;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.06em;color:var(--muted)}
+  .b-track i{font-style:normal;border:1px solid var(--line);border-radius:99px;padding:3px 10px;background:var(--pietra)}
+  .b-track em{font-style:normal;color:var(--line)}
+
   /* trattativa */
   .neg-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   @media (max-width:760px){.neg-grid{grid-template-columns:1fr}}
@@ -480,6 +505,27 @@
       <button class="btn btn-p" id="newdealbtn" onclick="newDeal()">+ Nuovo deal</button>
     </div>
     <div class="deal-list" id="deal-list"></div>
+
+    <div class="bandi" id="bandi">
+      <div class="bandi-head">
+        <h3 id="bandiT">Bandi pubblici</h3>
+        <span class="soon">To be released soon</span>
+        <span class="foryou" id="bandiFor" hidden>Pensato per il tuo profilo</span>
+      </div>
+      <div class="bandi-body">
+        <div>
+          <p class="bp" id="bandiP1">Ci dici la zona che ti interessa e CERTO ti porta i bandi giusti: aste, avvisi e gare pubbliche filtrati sul tuo profilo di investitore o sviluppatore.</p>
+          <p class="bp" id="bandiP2">Carichi i documenti aziendali una volta sola (attestazione SOA, visura, DURC), fai domanda dalla piattaforma e segui lo stato della pratica da qui.</p>
+          <div class="bandi-zone">
+            <label id="lb_zone">Zona di interesse<input id="bandi_zone" maxlength="60" placeholder="es. Milano e hinterland"></label>
+            <button class="btn btn-s notifybtn" id="bandiNotify" onclick="bandiNotify()">Avvisami al lancio</button>
+          </div>
+          <div class="b-locked"><svg width="15" height="15" viewBox="0 0 18 18" fill="none"><rect x="2" y="7" width="14" height="9" rx="1.5" stroke="#5D6470" stroke-width="1.5"/><path d="M5.5 7V5a3.5 3.5 0 017 0v2" stroke="#5D6470" stroke-width="1.5"/></svg><span id="bandiDocs">Documenti d'impresa: SOA · Visura camerale · DURC (si sbloccano al lancio)</span></div>
+          <div class="b-track"><i id="tr1">Domanda inviata</i><em>→</em><i id="tr2">In istruttoria</i><em>→</em><i id="tr3">Esito</i></div>
+        </div>
+        <div class="b-preview" id="bandi-preview"></div>
+      </div>
+    </div>
   </section>
 
   <!-- deal -->
@@ -720,6 +766,12 @@ var TXT={
 "Richiesta documenti":"Document request","La lista dei documenti mancanti, pronta da mandare alla controparte.":"The list of missing documents, ready to send to the counterparty.",
 "Clausole per il notaio":"Clauses for the notary","Le clausole generate dalle red flag, da portare al tavolo del rogito.":"The clauses generated from the red flags, to bring to the closing table.",
 "← Torna alla decisione":"← Back to the decision",
+"Bandi pubblici":"Public tenders","Pensato per il tuo profilo":"Built for your profile",
+"Ci dici la zona che ti interessa e CERTO ti porta i bandi giusti: aste, avvisi e gare pubbliche filtrati sul tuo profilo di investitore o sviluppatore.":"Tell us the area you care about and CERTO brings you the right tenders: public auctions, notices and calls filtered on your investor or developer profile.",
+"Carichi i documenti aziendali una volta sola (attestazione SOA, visura, DURC), fai domanda dalla piattaforma e segui lo stato della pratica da qui.":"Upload your company documents once (SOA certification, registry extract, DURC), apply from the platform and track the status of your application from here.",
+"Zona di interesse":"Area of interest","Avvisami al lancio":"Notify me at launch",
+"Documenti d'impresa: SOA · Visura camerale · DURC (si sbloccano al lancio)":"Company documents: SOA · Registry extract · DURC (unlocked at launch)",
+"Domanda inviata":"Application sent","In istruttoria":"Under review","Esito":"Outcome",
 "© 2026 CERTO · Beta riservata. I deal sono cifrati sul tuo dispositivo con la tua password. Le conclusioni si consolidano con i professionisti incaricati.":"© 2026 CERTO · Private beta. Deals are encrypted on your device with your password. Conclusions are consolidated with the professionals in charge."
 };
 var HTMLSWAPS=[
@@ -738,7 +790,7 @@ var HTMLSWAPS=[
 ["#h3s","Declare the project: what you want to do, your entry and your exit. The engine crosses the numbers with the Phase 2 red flags. Formulas in the open, no black boxes."],
 ["#h4s","The information is in: here you run the negotiation with every player. Log offers and counteroffers, keep score on the clauses, bring in the parties. <em>In this beta the room is local: the multi-user version arrives with the backend.</em>"]
 ];
-var PLACEH={f_addr:"Street, number",f_com:"Milan",f_mq:"e.g. 1200",f_piani:"e.g. 5",f_anno:"e.g. 1910",f_prop:"from the seller / broker",f_ask:"e.g. 4200000",r_co:"e.g. firm, family office, practice",o_note:"e.g. cellar included, furniture excluded"};
+var PLACEH={f_addr:"Street, number",f_com:"Milan",f_mq:"e.g. 1200",f_piani:"e.g. 5",f_anno:"e.g. 1910",f_prop:"from the seller / broker",f_ask:"e.g. 4200000",r_co:"e.g. firm, family office, practice",o_note:"e.g. cellar included, furniture excluded",bandi_zone:"e.g. Milan and hinterland"};
 
 var I18N={
 it:{
@@ -1004,7 +1056,7 @@ function delDeal(id,ev){
   if(!confirm(L.delDeal))return;
   delete DEALS.deals[id];
   DEALS.order=DEALS.order.filter(function(x){return x!==id});
-  persist();renderPortfolio();
+  persist();renderPortfolio();renderBandi();
 }
 
 // ---- punteggio (gamification) ----
@@ -1027,11 +1079,47 @@ function updScore(){
   document.getElementById('progbar').style.width=p+'%';
 }
 
+// ---- bandi (anteprima) ----
+var BANDI_EX={
+it:[
+ {t:"Asta pubblica: ex scuola comunale, Municipio 3",m:"Milano · base d'asta 1.200.000 € · scadenza 30 gg",match:"SOA non richiesta"},
+ {t:"Appalto lavori: riqualificazione immobile ERP",m:"Sesto S.G. · 3.400.000 € · scadenza 45 gg",match:"SOA OG1 cl. IV"},
+ {t:"Concessione di valorizzazione, immobile demaniale",m:"Monza · canone 18.000 €/anno · scadenza 60 gg",match:"profilo investitore"}],
+en:[
+ {t:"Public auction: former municipal school, Zone 3",m:"Milan · reserve 1,200,000 € · closes in 30 days",match:"no SOA required"},
+ {t:"Works contract: social housing renovation",m:"Sesto S.G. · 3,400,000 € · closes in 45 days",match:"SOA OG1 cl. IV"},
+ {t:"Development concession, state property",m:"Monza · 18,000 €/yr rent · closes in 60 days",match:"investor profile"}]};
+function renderBandi(){
+  var r=USER?(USER.roleIdx||0):4;
+  document.getElementById('bandiFor').hidden=!(r===0||r===1);
+  var host=document.getElementById('bandi-preview');
+  var exLbl=LANG==='it'?'esempio':'sample';
+  host.innerHTML=BANDI_EX[LANG].map(function(b){
+    return '<div class="b-item"><span class="bt">'+esc(b.t)+'</span><span class="ex">'+exLbl+'</span><span class="bm">'+esc(b.m)+'</span><span class="match">'+esc(b.match)+'</span></div>';
+  }).join('');
+  var users=lsGet('certo_users',{});
+  var me=USER&&users[USER.email];
+  var btn=document.getElementById('bandiNotify');
+  if(me&&me.bandiNotify){btn.textContent=LANG==='it'?'✓ Ti avviseremo':'✓ We will notify you';btn.disabled=true;}
+  if(me&&me.bandiZone)document.getElementById('bandi_zone').value=me.bandiZone;
+}
+function bandiNotify(){
+  var users=lsGet('certo_users',{});
+  if(USER&&users[USER.email]){
+    users[USER.email].bandiNotify=true;
+    users[USER.email].bandiZone=val('bandi_zone');
+    lsSet('certo_users',users);USER=users[USER.email];
+  }
+  var btn=document.getElementById('bandiNotify');
+  btn.textContent=LANG==='it'?'✓ Ti avviseremo':'✓ We will notify you';btn.disabled=true;
+  toast(LANG==='it'?'Segnato: ti avviseremo al lancio dei bandi':'Noted: we will notify you when tenders launch');
+}
+
 // ---- viste ----
 function showPortfolio(){
   document.getElementById('view-deal').hidden=true;
   document.getElementById('view-port').hidden=false;
-  renderPortfolio();
+  renderPortfolio();renderBandi();
 }
 function fmtDate(ts){return new Date(ts).toLocaleDateString(LOCALE,{day:'numeric',month:'short'});}
 function renderPortfolio(){
